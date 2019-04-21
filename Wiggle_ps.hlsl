@@ -117,7 +117,7 @@ float4 main(LightingPixelShaderInput input) : SV_Target
     float3 diffuseMaterialColour = textureColour.rgb; // Diffuse material colour in texture RGB (base colour of model)
     float specularMaterialColour = textureColour.a; // Specular material colour in texture A (shininess of the surface)
 
-    //diffuseMaterialColour.b = 0.75;
+    diffuseMaterialColour.g = 0.50;
 
     // Combine lighting with texture colours
     float3 finalColour = diffuseLight * diffuseMaterialColour + specularLight * specularMaterialColour;
