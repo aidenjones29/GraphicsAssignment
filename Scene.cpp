@@ -37,11 +37,13 @@ Mesh* gCrateMesh;
 Mesh* gGroundMesh;
 Mesh* gLightMesh;
 Mesh* gSphereMesh;
+Mesh* gCubeMesh;
 
 Model* gCharacter;
 Model* gCrate;
 Model* gGround;
 Model* gSphere;
+Model* gCube;
 
 Camera* gCamera;
 
@@ -69,7 +71,7 @@ const float gLightOrbitSpeed = 0.7f;
 
 // Spotlight data - using spotlights in this lab because shadow mapping needs to treat each light as a camera, which is easy with spotlights
 float gSpotlightConeAngle = 90.0f; // Spot light cone angle (degrees), like the FOV (field-of-view) of the spot light
-const float maxStrength = 40;
+const float maxStrength = 60;
 float lightSize = 10;
 float currentRGB[3] = {0, 0,0};
 int currentChange = 0;
@@ -132,6 +134,8 @@ ID3D11ShaderResourceView* gLightDiffuseMapSRV = nullptr;
 ID3D11Resource*           gSphereDiffuseSpecularMap = nullptr;
 ID3D11ShaderResourceView* gSphereDiffuseSpecularMapSRV = nullptr;
 
+ID3D11Resource*           gCubeDiffuseSpecularMap = nullptr;
+ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
 
 
 //--------------------------------------------------------------------------------------
@@ -168,6 +172,7 @@ bool InitGeometry()
         gGroundMesh    = new Mesh("Hills.x");
         gLightMesh     = new Mesh("Light.x");
 		gSphereMesh    = new Mesh("Sphere.x");
+		gCubeMesh      = new Mesh("Cube.x");
     }
     catch (std::runtime_error e)  // Constructors cannot return error messages so use exceptions to catch mesh errors (fairly standard approach this)
     {
@@ -204,7 +209,8 @@ bool InitGeometry()
 		!LoadTexture("Lines.png",                &gSphereDiffuseSpecularMap,    &gSphereDiffuseSpecularMapSRV   ) ||
         !LoadTexture("CargoA.dds",               &gCrateDiffuseSpecularMap,     &gCrateDiffuseSpecularMapSRV    ) ||
         !LoadTexture("GrassDiffuseSpecular.dds", &gGroundDiffuseSpecularMap,    &gGroundDiffuseSpecularMapSRV   ) ||
-        !LoadTexture("Flare.jpg",                &gLightDiffuseMap,             &gLightDiffuseMapSRV))
+        !LoadTexture("Flare.jpg",                &gLightDiffuseMap,             &gLightDiffuseMapSRV)             ||
+		!LoadTexture("StoneDiffuseSpecular.dds", &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV))
     {
         gLastError = "Error loading textures";
         return false;
@@ -298,15 +304,16 @@ bool InitScene()
     gCrate     = new Model(gCrateMesh);
     gGround    = new Model(gGroundMesh);
 	gSphere    = new Model(gSphereMesh);
+	gCube      = new Model(gCubeMesh);
 
 	// Initial positions
 	gCharacter->SetPosition({ 15, 0, 0 });
     gCharacter->SetRotation({ 0, ToRadians(215.0f), 0 });
-	gCrate-> SetPosition({ 40, 0, 30 });
+	gCrate-> SetPosition({ 0, 0, 50 });
 	gCrate-> SetScale(6);
 	gCrate-> SetRotation({ 0.0f, ToRadians(-20.0f), 0.0f });
 	gSphere->SetPosition({ 50, 0, -20 });
-
+	gCube->SetPosition({ 40, 10, 10 });
 
     // Light set-up - using an array this time
     for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -359,7 +366,8 @@ void ReleaseResources()
     if (gCharacterDiffuseSpecularMap)    gCharacterDiffuseSpecularMap->Release();
 	if (gSphereDiffuseSpecularMapSRV)    gSphereDiffuseSpecularMapSRV->Release();
 	if (gSphereDiffuseSpecularMap)       gSphereDiffuseSpecularMap->Release();
-
+	if (gCubeDiffuseSpecularMapSRV)    gCubeDiffuseSpecularMapSRV->Release();
+	if (gCubeDiffuseSpecularMap)       gCubeDiffuseSpecularMap->Release();
     if (gPerModelConstantBuffer)  gPerModelConstantBuffer->Release();
     if (gPerFrameConstantBuffer)  gPerFrameConstantBuffer->Release();
 
@@ -375,12 +383,14 @@ void ReleaseResources()
     delete gCrate;     gCrate     = nullptr;
     delete gCharacter; gCharacter = nullptr;
 	delete gSphere;    gSphere    = nullptr;
+	delete gCube;      gCube = nullptr;
 
     delete gLightMesh;     gLightMesh     = nullptr;
     delete gGroundMesh;    gGroundMesh    = nullptr;
     delete gCrateMesh;     gCrateMesh     = nullptr;
     delete gCharacterMesh; gCharacterMesh = nullptr;
 	delete gSphereMesh;    gSphereMesh    = nullptr;
+	delete gCubeMesh;      gCubeMesh      = nullptr;
 }
 
 
@@ -419,6 +429,7 @@ void RenderDepthBufferFromLight(int lightIndex)
     gCharacter->Render();
     gCrate->Render();
 	gSphere->Render();
+	gCube->Render();
 }
 
 
@@ -466,12 +477,14 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
     gCrate->Render();
 
+	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV);
+	gCube->Render();
+
+
 	gD3DContext->VSSetShader(gWiggleVertexShader, nullptr, 0);
 	gD3DContext->PSSetShader(gWigglePixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gSphereDiffuseSpecularMapSRV);
 	gSphere->Render();
-
-
     //// Render lights ////
 
     // Select which shaders to use next
@@ -630,7 +643,7 @@ void UpdateScene(float frameTime)
 	else
 	{
 		gLights[1].strength = maxStrength;
-		lightSize = 10;
+		lightSize = 15;
 	}
 
 	gLights[0].colour = currentRGB;

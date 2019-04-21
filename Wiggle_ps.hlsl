@@ -1,9 +1,3 @@
-
-void main( uint3 DTid : SV_DispatchThreadID )
-{
-
-}
-
 #include "Common.hlsli" // Shaders can also use include files - note the extension
 
 Texture2D DiffuseSpecularMap : register(t0); // Textures here can contain a diffuse map (main colour) in their rgb channels and a specular map (shininess) in the a channel
