@@ -20,7 +20,6 @@
 #include <sstream>
 #include <memory>
 
-
 //--------------------------------------------------------------------------------------
 // Scene Data
 //--------------------------------------------------------------------------------------
@@ -184,7 +183,6 @@ bool InitGeometry()
         return false;
     }
 
-
     // Create GPU-side constant buffers to receive the gPerFrameConstants and gPerModelConstants structures above
     // These allow us to pass data from CPU to shaders such as lighting information or matrices
     // See the comments above where these variable are declared and also the UpdateScene function
@@ -195,7 +193,6 @@ bool InitGeometry()
         gLastError = "Error creating constant buffers";
         return false;
     }
-
 
     //// Load / prepare textures on the GPU ////
 
@@ -280,7 +277,6 @@ bool InitGeometry()
 
    //*****************************//
 
-
   	// Create all filtering modes, blending modes etc. used by the app (see State.cpp/.h)
 	if (!CreateStates())
 	{
@@ -306,10 +302,10 @@ bool InitScene()
 	// Initial positions
 	gCharacter->SetPosition({ 15, 0, 0 });
     gCharacter->SetRotation({ 0, ToRadians(215.0f), 0 });
-	gCrate-> SetPosition({ 40, -20, 30 });
+	gCrate-> SetPosition({ 40, 0, 30 });
 	gCrate-> SetScale(6);
 	gCrate-> SetRotation({ 0.0f, ToRadians(-20.0f), 0.0f });
-	gSphere->SetPosition({ 20, 10, 40 });
+	gSphere->SetPosition({ 50, 0, -20 });
 
 
     // Light set-up - using an array this time
@@ -460,7 +456,8 @@ void RenderSceneFromCamera(Camera* camera)
 
     // Render model - it will update the model's world matrix and send it to the GPU in a constant buffer, then it will call
     // the Mesh render function, which will set up vertex & index buffer before finally calling Draw on the GPU
-    gGround->Render();
+
+	gGround->Render();
 
     // Render other lit models, only change textures for each onee
     gD3DContext->PSSetShaderResources(0, 1, &gCharacterDiffuseSpecularMapSRV); 
@@ -469,6 +466,8 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
     gCrate->Render();
 
+	gD3DContext->VSSetShader(gWiggleVertexShader, nullptr, 0);
+	gD3DContext->PSSetShader(gWigglePixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gSphereDiffuseSpecularMapSRV);
 	gSphere->Render();
 
@@ -619,6 +618,8 @@ void UpdateScene(float frameTime)
 {
 	// Control sphere (will update its world matrix)
 	gCharacter->Control(frameTime, Key_I, Key_K, Key_J, Key_L, Key_U, Key_O, Key_Period, Key_Comma );
+
+	gPerModelConstants.Wiggle += 3 * frameTime;
 
 	if (gLights[1].strength > 0)
 	{

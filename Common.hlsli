@@ -96,7 +96,7 @@ cbuffer PerFrameConstants : register(b0) // The b0 gives this constant buffer th
 cbuffer PerModelConstants : register(b1) // The b1 gives this constant buffer the number 1 - used in the C++ code
 {
     float4x4 gWorldMatrix;
-
     float3   gObjectColour;
     float    padding6;  // See notes on padding in structure above
+    float    gWiggle;
 }
