@@ -84,6 +84,7 @@ struct PerFrameConstants
 
     CVector3   cameraPosition;
     float      padding5;
+	float      parallaxDepth;
 };
 
 extern PerFrameConstants gPerFrameConstants;      // This variable holds the CPU-side constant buffer described above

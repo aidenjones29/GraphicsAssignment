@@ -38,12 +38,14 @@ Mesh* gGroundMesh;
 Mesh* gLightMesh;
 Mesh* gSphereMesh;
 Mesh* gCubeMesh;
+Mesh* gCube2Mesh;
 
 Model* gCharacter;
 Model* gCrate;
 Model* gGround;
 Model* gSphere;
 Model* gCube;
+Model* gCube2;
 
 Camera* gCamera;
 
@@ -112,7 +114,8 @@ ID3D11Buffer*     gPerFrameConstantBuffer; // The GPU buffer that will recieve t
 PerModelConstants gPerModelConstants;      // As above, but constant that change per-model (e.g. world matrix)
 ID3D11Buffer*     gPerModelConstantBuffer; // --"--
 
-
+float gParallaxDepth = 0.08f;
+bool gUseParallax = true;
 
 //--------------------------------------------------------------------------------------
 // Textures
@@ -136,6 +139,11 @@ ID3D11ShaderResourceView* gSphereDiffuseSpecularMapSRV = nullptr;
 
 ID3D11Resource*           gCubeDiffuseSpecularMap = nullptr;
 ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
+
+ID3D11Resource*           gCube2DiffuseSpecularMap = nullptr;
+ID3D11ShaderResourceView* gCube2DiffuseSpecularMapSRV = nullptr;
+ID3D11Resource*           gCube2NormalHeightMap = nullptr;
+ID3D11ShaderResourceView* gCube2NormalHeightMapSRV = nullptr;
 
 
 //--------------------------------------------------------------------------------------
@@ -173,6 +181,7 @@ bool InitGeometry()
         gLightMesh     = new Mesh("Light.x");
 		gSphereMesh    = new Mesh("Sphere.x");
 		gCubeMesh      = new Mesh("Cube.x");
+		gCube2Mesh     = new Mesh("Cube.x", true);
     }
     catch (std::runtime_error e)  // Constructors cannot return error messages so use exceptions to catch mesh errors (fairly standard approach this)
     {
@@ -205,12 +214,14 @@ bool InitGeometry()
     // The LoadTexture function requires you to pass a ID3D11Resource* (e.g. &gCubeDiffuseMap), which manages the GPU memory for the
     // texture and also a ID3D11ShaderResourceView* (e.g. &gCubeDiffuseMapSRV), which allows us to use the texture in shaders
     // The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
-    if (!LoadTexture("stoneDiffuseSpecular.dds", &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
+    if (!LoadTexture("StoneDiffuseSpecular.dds", &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
+		!LoadTexture("TechDiffuseSpecular.dds",  &gCube2DiffuseSpecularMap,     &gCube2DiffuseSpecularMapSRV    ) ||
+		!LoadTexture("TechNormalHeight.dds",     &gCube2NormalHeightMap,        &gCube2NormalHeightMapSRV       ) ||
 		!LoadTexture("Lines.png",                &gSphereDiffuseSpecularMap,    &gSphereDiffuseSpecularMapSRV   ) ||
         !LoadTexture("CargoA.dds",               &gCrateDiffuseSpecularMap,     &gCrateDiffuseSpecularMapSRV    ) ||
         !LoadTexture("GrassDiffuseSpecular.dds", &gGroundDiffuseSpecularMap,    &gGroundDiffuseSpecularMapSRV   ) ||
-        !LoadTexture("Flare.jpg",                &gLightDiffuseMap,             &gLightDiffuseMapSRV)             ||
-		!LoadTexture("StoneDiffuseSpecular.dds", &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV))
+        !LoadTexture("Flare.jpg",                &gLightDiffuseMap,             &gLightDiffuseMapSRV            ) ||
+		!LoadTexture("wood2.jpg",                &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV))
     {
         gLastError = "Error loading textures";
         return false;
@@ -299,12 +310,12 @@ bool InitGeometry()
 bool InitScene()
 {
     //// Set up scene ////
-
     gCharacter = new Model(gCharacterMesh);
     gCrate     = new Model(gCrateMesh);
     gGround    = new Model(gGroundMesh);
 	gSphere    = new Model(gSphereMesh);
 	gCube      = new Model(gCubeMesh);
+	gCube2     = new Model(gCube2Mesh);
 
 	// Initial positions
 	gCharacter->SetPosition({ 15, 0, 0 });
@@ -314,6 +325,7 @@ bool InitScene()
 	gCrate-> SetRotation({ 0.0f, ToRadians(-20.0f), 0.0f });
 	gSphere->SetPosition({ 50, 0, -20 });
 	gCube->SetPosition({ 40, 10, 10 });
+	gCube2->SetPosition({ 50, 10, -3 });
 
     // Light set-up - using an array this time
     for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -366,10 +378,14 @@ void ReleaseResources()
     if (gCharacterDiffuseSpecularMap)    gCharacterDiffuseSpecularMap->Release();
 	if (gSphereDiffuseSpecularMapSRV)    gSphereDiffuseSpecularMapSRV->Release();
 	if (gSphereDiffuseSpecularMap)       gSphereDiffuseSpecularMap->Release();
-	if (gCubeDiffuseSpecularMapSRV)    gCubeDiffuseSpecularMapSRV->Release();
-	if (gCubeDiffuseSpecularMap)       gCubeDiffuseSpecularMap->Release();
-    if (gPerModelConstantBuffer)  gPerModelConstantBuffer->Release();
-    if (gPerFrameConstantBuffer)  gPerFrameConstantBuffer->Release();
+	if (gCubeDiffuseSpecularMapSRV)      gCubeDiffuseSpecularMapSRV->Release();
+	if (gCubeDiffuseSpecularMap)         gCubeDiffuseSpecularMap->Release();
+    if (gPerModelConstantBuffer)         gPerModelConstantBuffer->Release();
+    if (gPerFrameConstantBuffer)         gPerFrameConstantBuffer->Release();
+	if (gCube2DiffuseSpecularMapSRV)     gCube2DiffuseSpecularMapSRV->Release();
+	if (gCube2DiffuseSpecularMap)        gCube2DiffuseSpecularMap->Release();
+	if (gCube2NormalHeightMapSRV)        gCube2NormalHeightMapSRV->Release();
+	if (gCube2NormalHeightMap)           gCube2NormalHeightMap->Release();
 
     ReleaseShaders();
 
@@ -383,7 +399,8 @@ void ReleaseResources()
     delete gCrate;     gCrate     = nullptr;
     delete gCharacter; gCharacter = nullptr;
 	delete gSphere;    gSphere    = nullptr;
-	delete gCube;      gCube = nullptr;
+	delete gCube;      gCube      = nullptr;
+	delete gCube2;     gCube2     = nullptr;
 
     delete gLightMesh;     gLightMesh     = nullptr;
     delete gGroundMesh;    gGroundMesh    = nullptr;
@@ -406,6 +423,7 @@ void RenderDepthBufferFromLight(int lightIndex)
     gPerFrameConstants.viewMatrix           = CalculateLightViewMatrix(lightIndex);
     gPerFrameConstants.projectionMatrix     = CalculateLightProjectionMatrix(lightIndex);
     gPerFrameConstants.viewProjectionMatrix = gPerFrameConstants.viewMatrix * gPerFrameConstants.projectionMatrix;
+	gPerFrameConstants.parallaxDepth = (gUseParallax ? gParallaxDepth : 0);
     UpdateConstantBuffer(gPerFrameConstantBuffer, gPerFrameConstants);
 
     // Indicate that the constant buffer we just updated is for use in the vertex shader (VS) and pixel shader (PS)
@@ -430,6 +448,7 @@ void RenderDepthBufferFromLight(int lightIndex)
     gCrate->Render();
 	gSphere->Render();
 	gCube->Render();
+	gCube2->Render();
 }
 
 
@@ -476,8 +495,17 @@ void RenderSceneFromCamera(Camera* camera)
 
     gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
     gCrate->Render();
+	
+	gD3DContext->VSSetShader(gNormalMappingVertexShader, nullptr, 0);
+	gD3DContext->PSSetShader(gNormalMappingPixelShader, nullptr, 0);
+	gD3DContext->PSSetShaderResources(0, 1, &gCube2DiffuseSpecularMapSRV);
+	gD3DContext->PSSetShaderResources(1, 1, &gCube2NormalHeightMapSRV);
+	gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
+	gCube2->Render();
 
+	gD3DContext->PSSetShader(gLerpPixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV);
+	gD3DContext->PSSetShaderResources(1, 1, &gCharacterDiffuseSpecularMapSRV);
 	gCube->Render();
 
 
@@ -663,6 +691,11 @@ void UpdateScene(float frameTime)
 	{
 		currentChange++;
 		if (currentChange > 2) { currentChange = 0; }
+	}
+
+	if (KeyHit(Key_1))
+	{
+		gUseParallax = !gUseParallax;
 	}
 
     // Orbit the light - a bit of a cheat with the static variable [ask the tutor if you want to know what this is]

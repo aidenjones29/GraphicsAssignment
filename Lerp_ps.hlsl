@@ -1,10 +1,12 @@
 #include "Common.hlsli" // Shaders can also use include files - note the extension
 
 Texture2D DiffuseSpecularMap : register(t0); // Textures here can contain a diffuse map (main colour) in their rgb channels and a specular map (shininess) in the a channel
+Texture2D DiffuseSpecularMap2 : register(t1);
+
 SamplerState TexSampler : register(s0); // A sampler is a filter for a texture like bilinear, trilinear or anisotropic - this is the sampler used for the texture above
 
-Texture2D ShadowMapLight1 : register(t1); // Texture holding the view of the scene from a light
-Texture2D ShadowMapLight2 : register(t2);
+Texture2D ShadowMapLight1 : register(t2); // Texture holding the view of the scene from a light
+Texture2D ShadowMapLight2 : register(t3);
 SamplerState PointClamp : register(s1); // No filtering for shadow maps (you might think you could use trilinear or similar, but it will filter light depths not the shadows cast...)
 
 
@@ -66,29 +68,29 @@ float4 main(LightingPixelShaderInput input) : SV_Target
         if (depthFromLight < ShadowMapLight2.Sample(PointClamp, shadowMapUV).r)
         {
             float3 light2Dist = length(gLight2Position - input.worldPosition);
-            diffuseLight2 = gLight2Colour * max(dot(input.worldNormal, light2Direction), 0) / light2Dist; // Equations from lighting lecture
+            diffuseLight2 = gLight2Colour * max(dot(input.worldNormal, light2Direction), 0) / light2Dist; 
             float3 halfway = normalize(light2Direction + cameraDirection);
-            specularLight2 = diffuseLight2 * pow(max(dot(input.worldNormal, halfway), 0), gSpecularPower); // Multiplying by diffuseLight instead of light colour - my own personal preference
+            specularLight2 = diffuseLight2 * pow(max(dot(input.worldNormal, halfway), 0), gSpecularPower); 
         }
     }
 
-	// Sum the effect of the lights - add the ambient at this stage rather than for each light (or we will get too much ambient)
     float3 diffuseLight = gAmbientColour + diffuseLight1 + diffuseLight2;
     float3 specularLight = specularLight1 + specularLight2;
 
 
 	////////////////////
 	// Combine lighting and textures
-
+    
     // Sample diffuse material and specular material colour for this pixel from a texture using a given sampler that you set up in the C++ code
-    float4 textureColour = DiffuseSpecularMap.Sample(TexSampler, input.uv);
-    float3 diffuseMaterialColour = textureColour.rgb; // Diffuse material colour in texture RGB (base colour of model)
-    float specularMaterialColour = textureColour.a; // Specular material colour in texture A (shininess of the surface)
+    float4 textureColour  = DiffuseSpecularMap.Sample(TexSampler, input.uv);
+    float4 texture2Colour = DiffuseSpecularMap2.Sample(TexSampler, input.uv);
 
-    diffuseMaterialColour.g = 0.50;
+    float t = sin(gWiggle / 2);
 
-    // Combine lighting with texture colours
+    float3 diffuseMaterialColour = lerp(textureColour.rgb, texture2Colour.rgb, t);
+    float specularMaterialColour = lerp(textureColour.a, texture2Colour.a, t);
+
     float3 finalColour = diffuseLight * diffuseMaterialColour + specularLight * specularMaterialColour;
 
-    return float4(finalColour, 1.0f); // Always use 1.0f for output alpha - no alpha blending in this lab
+    return float4(finalColour, 1.0f);
 }

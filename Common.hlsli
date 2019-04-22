@@ -84,6 +84,7 @@ cbuffer PerFrameConstants : register(b0) // The b0 gives this constant buffer th
 
     float3   gCameraPosition;
     float    padding5;
+    float gParallaxDepth;
 }
 // Note constant buffers are not structs: we don't use the name of the constant buffer, these are really just a collection of global variables (hence the 'g')
 
@@ -100,3 +101,24 @@ cbuffer PerModelConstants : register(b1) // The b1 gives this constant buffer th
     float    padding6;  // See notes on padding in structure above
     float    gWiggle;
 }
+
+struct TangentVertex
+{
+    float3 position : position;
+    float3 normal : normal;
+    float3 tangent : tangent;
+    float2 uv : uv;
+};
+
+struct NormalMappingPixelShaderInput
+{
+    float4 projectedPosition : SV_Position; // This is the position of the pixel to render, this is a required input
+                                            // to the pixel shader and so it uses the special semantic "SV_Position"
+                                            // because the shader needs to identify this important information
+    
+    float3 worldPosition : worldPosition; // Data required for lighting calculations in the pixel shader
+    float3 modelNormal : modelNormal; // --"--
+    float3 modelTangent : modelTangent; // --"--
+    
+    float2 uv : uv; // UVs are texture coordinates. The artist specifies for every vertex which point on the texture is "pinned" to that vertex.
+};
