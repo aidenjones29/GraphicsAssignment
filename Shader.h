@@ -10,11 +10,7 @@
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
-// Make global variables available to other files. "extern" means this variable is defined in another
-// file somewhere. We should use classes and avoid use of globals, but done this way to keep code simpler
-// so the DirectX content is clearer. However, try to architect your own code in a better way.
 
-// Vertex and pixel shader DirectX objects
 extern ID3D11VertexShader* gPixelLightingVertexShader;
 extern ID3D11PixelShader*  gPixelLightingPixelShader;
 extern ID3D11VertexShader* gBasicTransformVertexShader;
@@ -23,9 +19,10 @@ extern ID3D11PixelShader*  gDepthOnlyPixelShader;
 extern ID3D11VertexShader* gWiggleVertexShader;
 extern ID3D11PixelShader*  gWigglePixelShader;
 extern ID3D11PixelShader*  gLerpPixelShader;
+extern ID3D11VertexShader* gParallaxMappingVertexShader;
+extern ID3D11PixelShader*  gParallaxMappingPixelShader;
 extern ID3D11VertexShader* gNormalMappingVertexShader;
 extern ID3D11PixelShader*  gNormalMappingPixelShader;
-
 
 //--------------------------------------------------------------------------------------
 // Shader creation / destruction
@@ -36,7 +33,6 @@ bool LoadShaders();
 
 // Release shaders used by the app
 void ReleaseShaders();
-
 
 //--------------------------------------------------------------------------------------
 // Constant buffer creation / destruction

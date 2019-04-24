@@ -15,16 +15,18 @@
 //**** Update Shader.h if you add things here ****//
 
 // Vertex and pixel shader DirectX objects
-ID3D11VertexShader* gPixelLightingVertexShader = nullptr;
-ID3D11PixelShader*  gPixelLightingPixelShader  = nullptr;
-ID3D11VertexShader* gBasicTransformVertexShader= nullptr; // Used before light model and depth-only pixel shader
-ID3D11PixelShader*  gLightModelPixelShader     = nullptr;
-ID3D11PixelShader*  gDepthOnlyPixelShader      = nullptr;
-ID3D11VertexShader* gWiggleVertexShader        = nullptr;
-ID3D11PixelShader*  gWigglePixelShader         = nullptr;
-ID3D11PixelShader*  gLerpPixelShader           = nullptr;
-ID3D11VertexShader* gNormalMappingVertexShader = nullptr;
-ID3D11PixelShader*  gNormalMappingPixelShader  = nullptr;
+ID3D11VertexShader* gPixelLightingVertexShader   = nullptr;
+ID3D11PixelShader*  gPixelLightingPixelShader    = nullptr;
+ID3D11VertexShader* gBasicTransformVertexShader  = nullptr; // Used before light model and depth-only pixel shader
+ID3D11PixelShader*  gLightModelPixelShader       = nullptr;
+ID3D11PixelShader*  gDepthOnlyPixelShader        = nullptr;
+ID3D11VertexShader* gWiggleVertexShader          = nullptr;
+ID3D11PixelShader*  gWigglePixelShader           = nullptr;
+ID3D11PixelShader*  gLerpPixelShader             = nullptr;
+ID3D11VertexShader* gParallaxMappingVertexShader = nullptr;
+ID3D11PixelShader*  gParallaxMappingPixelShader  = nullptr;
+ID3D11VertexShader* gNormalMappingVertexShader   = nullptr;
+ID3D11PixelShader* gNormalMappingPixelShader     = nullptr;
 
 //--------------------------------------------------------------------------------------
 // Shader creation / destruction
@@ -36,22 +38,25 @@ bool LoadShaders()
     // Shaders must be added to the Visual Studio project to be compiled, they use the extension ".hlsl".
     // To load them for use, include them here without the extension. Use the correct function for each.
     // Ensure you release the shaders in the ShutdownDirect3D function below
-    gPixelLightingVertexShader  = LoadVertexShader("ShadowMapping_vs"); // Note how the shader files are named to show what type they are
-    gPixelLightingPixelShader   = LoadPixelShader ("ShadowMapping_ps");
-    gBasicTransformVertexShader = LoadVertexShader("BasicTransform_vs");
-    gLightModelPixelShader      = LoadPixelShader ("LightModel_ps");
-    gDepthOnlyPixelShader       = LoadPixelShader ("DepthOnly_ps");
-	gWiggleVertexShader         = LoadVertexShader("Wiggle_vs");
-	gWigglePixelShader          = LoadPixelShader("Wiggle_ps");
-	gLerpPixelShader            = LoadPixelShader("Lerp_ps");
-	gNormalMappingVertexShader  = LoadVertexShader("ParallaxMapping_vs");
-	gNormalMappingPixelShader   = LoadPixelShader("ParallaxMapping_ps");
+    gPixelLightingVertexShader   = LoadVertexShader("ShadowMapping_vs");
+    gPixelLightingPixelShader    = LoadPixelShader ("ShadowMapping_ps");
+    gBasicTransformVertexShader  = LoadVertexShader("BasicTransform_vs");
+    gLightModelPixelShader       = LoadPixelShader ("LightModel_ps");
+    gDepthOnlyPixelShader        = LoadPixelShader ("DepthOnly_ps");
+	gWiggleVertexShader          = LoadVertexShader("Wiggle_vs");
+	gWigglePixelShader           = LoadPixelShader("Wiggle_ps");
+	gLerpPixelShader             = LoadPixelShader("Lerp_ps");
+	gParallaxMappingVertexShader = LoadVertexShader("ParallaxMapping_vs");
+	gParallaxMappingPixelShader  = LoadPixelShader("ParallaxMapping_ps");
+	gNormalMappingVertexShader   = LoadVertexShader("NormalMapping_vs");
+	gNormalMappingPixelShader    = LoadPixelShader("NormalMapping_ps");
 
-    if (gPixelLightingVertexShader  == nullptr || gPixelLightingPixelShader == nullptr ||
-        gBasicTransformVertexShader == nullptr || gLightModelPixelShader    == nullptr || 
-		gDepthOnlyPixelShader       == nullptr || gWigglePixelShader        == nullptr ||
-		gNormalMappingVertexShader  == nullptr || gNormalMappingPixelShader == nullptr ||
-		gWiggleVertexShader         == nullptr || gLerpPixelShader          == nullptr)
+    if (gPixelLightingVertexShader   == nullptr || gPixelLightingPixelShader   == nullptr ||
+        gBasicTransformVertexShader  == nullptr || gLightModelPixelShader      == nullptr || 
+		gDepthOnlyPixelShader        == nullptr || gWigglePixelShader          == nullptr ||
+		gParallaxMappingVertexShader == nullptr || gParallaxMappingPixelShader == nullptr ||
+		gNormalMappingPixelShader    == nullptr || gNormalMappingVertexShader  == nullptr ||
+		gWiggleVertexShader          == nullptr || gLerpPixelShader            == nullptr)
     {
         gLastError = "Error loading shaders";
         return false;
@@ -71,11 +76,11 @@ void ReleaseShaders()
 	if (gWigglePixelShader)           gWigglePixelShader->Release();
 	if (gWiggleVertexShader)          gWiggleVertexShader->Release();
 	if (gLerpPixelShader)             gLerpPixelShader->Release();
-	if (gNormalMappingVertexShader)  gNormalMappingVertexShader->Release();
-	if (gNormalMappingPixelShader)   gNormalMappingPixelShader->Release();
+	if (gParallaxMappingVertexShader) gParallaxMappingVertexShader->Release();
+	if (gParallaxMappingPixelShader)  gParallaxMappingPixelShader->Release();
+	if (gNormalMappingPixelShader)    gNormalMappingPixelShader->Release();
+	if (gNormalMappingVertexShader)   gNormalMappingVertexShader->Release();
 }
-
-
 
 // Load a vertex shader, include the file in the project and pass the name (without the .hlsl extension)
 // to this function. The returned pointer needs to be released before quitting. Returns nullptr on failure. 
@@ -109,10 +114,6 @@ ID3D11VertexShader* LoadVertexShader(std::string shaderName)
     return shader;
 }
 
-
-// Load a pixel shader, include the file in the project and pass the name (without the .hlsl extension)
-// to this function. The returned pointer needs to be released before quitting. Returns nullptr on failure. 
-// Basically the same code as above but for pixel shaders
 ID3D11PixelShader* LoadPixelShader(std::string shaderName)
 {
     // Open compiled shader object file
@@ -143,12 +144,6 @@ ID3D11PixelShader* LoadPixelShader(std::string shaderName)
     return shader;
 }
 
-// Very advanced topic: When creating a vertex layout for geometry (see Scene.cpp), you need the signature
-// (bytecode) of a shader that uses that vertex layout. This is an annoying requirement and tends to create
-// unnecessary coupling between shaders and vertex buffers.
-// This is a trick to simplify things - pass a vertex layout to this function and it will write and compile
-// a temporary shader to match. You don't need to know about the actual shaders in use in the app.
-// Release the signature (called a ID3DBlob!) after use. Returns nullptr on failure.
 ID3DBlob* CreateSignatureForVertexLayout(const D3D11_INPUT_ELEMENT_DESC vertexLayout[], int numElements)
 {
     std::string shaderSource = "float4 main(";
@@ -185,20 +180,6 @@ ID3DBlob* CreateSignatureForVertexLayout(const D3D11_INPUT_ELEMENT_DESC vertexLa
     return compiledShader;
 }
 
-
-//--------------------------------------------------------------------------------------
-// Constant buffer creation / destruction
-//--------------------------------------------------------------------------------------
-
-// Constant Buffers are a way of passing data from C++ to the GPU. They are called constants but that only means
-// they are constant for the duration of a single GPU draw call. The "constants" correspond to variables in C++
-// that we will change per-model, or per-frame etc.
-//
-// We typically set up a C++ structure to exactly match the values we need in a shader and then create a constant
-// buffer the same size as the structure. That makes updating values from C++ to shader easy - see the main code.
-
-// Create and return a constant buffer of the given size
-// The returned pointer needs to be released before quitting. Returns nullptr on failure. 
 ID3D11Buffer* CreateConstantBuffer(int size)
 {
     D3D11_BUFFER_DESC cbDesc;

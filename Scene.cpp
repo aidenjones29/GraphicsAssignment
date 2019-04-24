@@ -124,26 +124,28 @@ bool gUseParallax = true;
 // DirectX objects controlling textures used in this lab
 ID3D11Resource*           gCharacterDiffuseSpecularMap    = nullptr; // This object represents the memory used by the texture on the GPU
 ID3D11ShaderResourceView* gCharacterDiffuseSpecularMapSRV = nullptr; // This object is used to give shaders access to the texture above (SRV = shader resource view)
+ID3D11Resource*           gCharacterNormalMap             = nullptr;
+ID3D11ShaderResourceView* gCharacterNormalMapSRV          = nullptr;
 
-ID3D11Resource*           gCrateDiffuseSpecularMap    = nullptr;
-ID3D11ShaderResourceView* gCrateDiffuseSpecularMapSRV = nullptr;
+ID3D11Resource*           gCrateDiffuseSpecularMap        = nullptr;
+ID3D11ShaderResourceView* gCrateDiffuseSpecularMapSRV     = nullptr;
 
-ID3D11Resource*           gGroundDiffuseSpecularMap    = nullptr;
-ID3D11ShaderResourceView* gGroundDiffuseSpecularMapSRV = nullptr;
+ID3D11Resource*           gGroundDiffuseSpecularMap       = nullptr;
+ID3D11ShaderResourceView* gGroundDiffuseSpecularMapSRV    = nullptr;
 
-ID3D11Resource*           gLightDiffuseMap    = nullptr;
-ID3D11ShaderResourceView* gLightDiffuseMapSRV = nullptr;
+ID3D11Resource*           gLightDiffuseMap                = nullptr;
+ID3D11ShaderResourceView* gLightDiffuseMapSRV             = nullptr;
 
-ID3D11Resource*           gSphereDiffuseSpecularMap = nullptr;
-ID3D11ShaderResourceView* gSphereDiffuseSpecularMapSRV = nullptr;
+ID3D11Resource*           gSphereDiffuseSpecularMap       = nullptr;
+ID3D11ShaderResourceView* gSphereDiffuseSpecularMapSRV    = nullptr;
 
-ID3D11Resource*           gCubeDiffuseSpecularMap = nullptr;
-ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
+ID3D11Resource*           gCubeDiffuseSpecularMap         = nullptr;
+ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV      = nullptr;
 
-ID3D11Resource*           gCube2DiffuseSpecularMap = nullptr;
-ID3D11ShaderResourceView* gCube2DiffuseSpecularMapSRV = nullptr;
-ID3D11Resource*           gCube2NormalHeightMap = nullptr;
-ID3D11ShaderResourceView* gCube2NormalHeightMapSRV = nullptr;
+ID3D11Resource*           gCube2DiffuseSpecularMap        = nullptr;
+ID3D11ShaderResourceView* gCube2DiffuseSpecularMapSRV     = nullptr;
+ID3D11Resource*           gCube2NormalHeightMap           = nullptr;
+ID3D11ShaderResourceView* gCube2NormalHeightMapSRV        = nullptr;
 
 
 //--------------------------------------------------------------------------------------
@@ -214,14 +216,15 @@ bool InitGeometry()
     // The LoadTexture function requires you to pass a ID3D11Resource* (e.g. &gCubeDiffuseMap), which manages the GPU memory for the
     // texture and also a ID3D11ShaderResourceView* (e.g. &gCubeDiffuseMapSRV), which allows us to use the texture in shaders
     // The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
-    if (!LoadTexture("StoneDiffuseSpecular.dds", &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
-		!LoadTexture("TechDiffuseSpecular.dds",  &gCube2DiffuseSpecularMap,     &gCube2DiffuseSpecularMapSRV    ) ||
-		!LoadTexture("TechNormalHeight.dds",     &gCube2NormalHeightMap,        &gCube2NormalHeightMapSRV       ) ||
-		!LoadTexture("Lines.png",                &gSphereDiffuseSpecularMap,    &gSphereDiffuseSpecularMapSRV   ) ||
-        !LoadTexture("CargoA.dds",               &gCrateDiffuseSpecularMap,     &gCrateDiffuseSpecularMapSRV    ) ||
-        !LoadTexture("GrassDiffuseSpecular.dds", &gGroundDiffuseSpecularMap,    &gGroundDiffuseSpecularMapSRV   ) ||
-        !LoadTexture("Flare.jpg",                &gLightDiffuseMap,             &gLightDiffuseMapSRV            ) ||
-		!LoadTexture("wood2.jpg",                &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV))
+    if (!LoadTexture("PatternDiffuseSpecular.dds", &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
+		!LoadTexture("PatternNormal.dds",          &gCharacterNormalMap,          &gCharacterNormalMapSRV         ) ||
+		!LoadTexture("TechDiffuseSpecular.dds",    &gCube2DiffuseSpecularMap,     &gCube2DiffuseSpecularMapSRV    ) ||
+		!LoadTexture("TechNormalHeight.dds",       &gCube2NormalHeightMap,        &gCube2NormalHeightMapSRV       ) ||
+		!LoadTexture("Lines.png",                  &gSphereDiffuseSpecularMap,    &gSphereDiffuseSpecularMapSRV   ) ||
+        !LoadTexture("CargoA.dds",                 &gCrateDiffuseSpecularMap,     &gCrateDiffuseSpecularMapSRV    ) ||
+        !LoadTexture("GrassDiffuseSpecular.dds",   &gGroundDiffuseSpecularMap,    &gGroundDiffuseSpecularMapSRV   ) ||
+        !LoadTexture("Flare.jpg",                  &gLightDiffuseMap,             &gLightDiffuseMapSRV            ) ||
+		!LoadTexture("wood2.jpg",                  &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV))
     {
         gLastError = "Error loading textures";
         return false;
@@ -303,7 +306,6 @@ bool InitGeometry()
 
 	return true;
 }
-
 
 // Prepare the scene
 // Returns true on success
@@ -490,14 +492,18 @@ void RenderSceneFromCamera(Camera* camera)
 	gGround->Render();
 
     // Render other lit models, only change textures for each onee
-    gD3DContext->PSSetShaderResources(0, 1, &gCharacterDiffuseSpecularMapSRV); 
-    gCharacter->Render();
-
     gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
     gCrate->Render();
 	
-	gD3DContext->VSSetShader(gNormalMappingVertexShader, nullptr, 0);
-	gD3DContext->PSSetShader(gNormalMappingPixelShader, nullptr, 0);
+	//gD3DContext->VSSetShader(gNormalMappingVertexShader, nullptr, 0);
+	//gD3DContext->PSSetShader(gNormalMappingPixelShader, nullptr, 0);
+    gD3DContext->PSSetShaderResources(0, 1, &gCharacterDiffuseSpecularMapSRV);
+	//gD3DContext->PSSetShaderResources(1, 1, &gCharacterNormalMapSRV);
+	//gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
+    gCharacter->Render();
+	
+	gD3DContext->VSSetShader(gParallaxMappingVertexShader, nullptr, 0);
+	gD3DContext->PSSetShader(gParallaxMappingPixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gCube2DiffuseSpecularMapSRV);
 	gD3DContext->PSSetShaderResources(1, 1, &gCube2NormalHeightMapSRV);
 	gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
@@ -505,7 +511,7 @@ void RenderSceneFromCamera(Camera* camera)
 
 	gD3DContext->PSSetShader(gLerpPixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV);
-	gD3DContext->PSSetShaderResources(1, 1, &gCharacterDiffuseSpecularMapSRV);
+	gD3DContext->PSSetShaderResources(1, 1, &gSphereDiffuseSpecularMapSRV);
 	gCube->Render();
 
 
