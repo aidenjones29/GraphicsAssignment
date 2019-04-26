@@ -46,6 +46,7 @@ Model* gGround;
 Model* gSphere;
 Model* gCube;
 Model* gCube2;
+Model* gCube3;
 
 Camera* gCamera;
 
@@ -141,6 +142,8 @@ ID3D11ShaderResourceView* gSphereDiffuseSpecularMapSRV    = nullptr;
 
 ID3D11Resource*           gCubeDiffuseSpecularMap         = nullptr;
 ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV      = nullptr;
+ID3D11Resource*           gCubeTwoDiffuseSpecularMap      = nullptr;
+ID3D11ShaderResourceView* gCubeTwoDiffuseSpecularMapSRV   = nullptr;
 
 ID3D11Resource*           gCube2DiffuseSpecularMap        = nullptr;
 ID3D11ShaderResourceView* gCube2DiffuseSpecularMapSRV     = nullptr;
@@ -223,6 +226,7 @@ bool InitGeometry()
         !LoadTexture("CargoA.dds",                 &gCrateDiffuseSpecularMap,     &gCrateDiffuseSpecularMapSRV    ) ||
         !LoadTexture("GrassDiffuseSpecular.dds",   &gGroundDiffuseSpecularMap,    &gGroundDiffuseSpecularMapSRV   ) ||
         !LoadTexture("Flare.jpg",                  &gLightDiffuseMap,             &gLightDiffuseMapSRV            ) ||
+		!LoadTexture("StoneDiffuseSpecular.dds",   &gCubeTwoDiffuseSpecularMap,   &gCubeTwoDiffuseSpecularMapSRV  ) ||
 		!LoadTexture("wood2.jpg",                  &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV))
     {
         gLastError = "Error loading textures";
@@ -317,16 +321,18 @@ bool InitScene()
 	gSphere    = new Model(gSphereMesh);
 	gCube      = new Model(gCubeMesh);
 	gCube2     = new Model(gCube2Mesh);
+	gCube3     = new Model(gCubeMesh);
 
 	// Initial positions
 	gCharacter->SetPosition({ 15, 0, 0 });
     gCharacter->SetRotation({ 0, ToRadians(215.0f), 0 });
-	gCrate-> SetPosition({ 0, 0, 50 });
+	gCrate-> SetPosition({ 0, 0, 80 });
 	gCrate-> SetScale(6);
 	gCrate-> SetRotation({ 0.0f, ToRadians(-20.0f), 0.0f });
 	gSphere->SetPosition({ 50, 0, -20 });
 	gCube->SetPosition({ 40, 10, 10 });
 	gCube2->SetPosition({ 50, 10, -3 });
+	gCube3->SetPosition({ 20, 10, 40 });
 
     // Light set-up - using an array this time
     for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -381,6 +387,8 @@ void ReleaseResources()
 	if (gSphereDiffuseSpecularMap)       gSphereDiffuseSpecularMap->Release();
 	if (gCubeDiffuseSpecularMapSRV)      gCubeDiffuseSpecularMapSRV->Release();
 	if (gCubeDiffuseSpecularMap)         gCubeDiffuseSpecularMap->Release();
+	if (gCubeTwoDiffuseSpecularMapSRV)   gCubeTwoDiffuseSpecularMapSRV->Release();
+	if (gCubeTwoDiffuseSpecularMap)      gCubeTwoDiffuseSpecularMap->Release();
     if (gPerModelConstantBuffer)         gPerModelConstantBuffer->Release();
     if (gPerFrameConstantBuffer)         gPerFrameConstantBuffer->Release();
 	if (gCube2DiffuseSpecularMapSRV)     gCube2DiffuseSpecularMapSRV->Release();
@@ -402,6 +410,7 @@ void ReleaseResources()
 	delete gSphere;    gSphere    = nullptr;
 	delete gCube;      gCube      = nullptr;
 	delete gCube2;     gCube2     = nullptr;
+	delete gCube3;     gCube3     = nullptr;
 
     delete gLightMesh;     gLightMesh     = nullptr;
     delete gGroundMesh;    gGroundMesh    = nullptr;
@@ -450,6 +459,7 @@ void RenderDepthBufferFromLight(int lightIndex)
 	gSphere->Render();
 	gCube->Render();
 	gCube2->Render();
+	gCube3->Render();
 }
 
 
@@ -494,6 +504,9 @@ void RenderSceneFromCamera(Camera* camera)
 	gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
     gCrate->Render();
 
+	gD3DContext->PSSetShaderResources(0, 1, &gCubeTwoDiffuseSpecularMapSRV);
+	gCube3->Render();
+
 	gD3DContext->VSSetShader(gNormalMappingVertexShader, nullptr, 0);
 	gD3DContext->PSSetShader(gNormalMappingPixelShader, nullptr, 0);
     gD3DContext->PSSetShaderResources(0, 1, &gCharacterDiffuseSpecularMapSRV);
@@ -510,7 +523,7 @@ void RenderSceneFromCamera(Camera* camera)
 
 	gD3DContext->PSSetShader(gLerpPixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV);
-	gD3DContext->PSSetShaderResources(1, 1, &gSphereDiffuseSpecularMapSRV);
+	gD3DContext->PSSetShaderResources(1, 1, &gCubeTwoDiffuseSpecularMapSRV);
 	gCube->Render();
 
 

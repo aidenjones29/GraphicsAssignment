@@ -47,6 +47,7 @@ float4 main(LightingPixelShaderInput input) : SV_Target
 	// LIGHT 1
 
 	float3 diffuseLight1  = 0; // Initialy assume no contribution from this light
+
 	float3 specularLight1 = 0;
 
 	// Direction from pixel to light
