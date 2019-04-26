@@ -177,7 +177,7 @@ bool InitGeometry()
     // IMPORTANT NOTE: Will only keep the first object from the mesh - multipart objects will have parts missing - see later lab for more robust loader
     try 
     {
-        gCharacterMesh = new Mesh("teapot.x");
+        gCharacterMesh = new Mesh("teapot.x", true);
         gCrateMesh     = new Mesh("CargoContainer.x");
         gGroundMesh    = new Mesh("Hills.x");
         gLightMesh     = new Mesh("Light.x");
@@ -190,7 +190,6 @@ bool InitGeometry()
         gLastError = e.what(); // This picks up the error message put in the exception (see Mesh.cpp)
         return false;
     }
-
 
     // Load the shaders required for the geometry we will use (see Shader.cpp / .h)
     if (!LoadShaders())
@@ -492,14 +491,14 @@ void RenderSceneFromCamera(Camera* camera)
 	gGround->Render();
 
     // Render other lit models, only change textures for each onee
-    gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
+	gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
     gCrate->Render();
-	
-	//gD3DContext->VSSetShader(gNormalMappingVertexShader, nullptr, 0);
-	//gD3DContext->PSSetShader(gNormalMappingPixelShader, nullptr, 0);
+
+	gD3DContext->VSSetShader(gNormalMappingVertexShader, nullptr, 0);
+	gD3DContext->PSSetShader(gNormalMappingPixelShader, nullptr, 0);
     gD3DContext->PSSetShaderResources(0, 1, &gCharacterDiffuseSpecularMapSRV);
-	//gD3DContext->PSSetShaderResources(1, 1, &gCharacterNormalMapSRV);
-	//gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
+	gD3DContext->PSSetShaderResources(1, 1, &gCharacterNormalMapSRV);
+	gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
     gCharacter->Render();
 	
 	gD3DContext->VSSetShader(gParallaxMappingVertexShader, nullptr, 0);
