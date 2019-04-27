@@ -100,6 +100,7 @@ struct PerModelConstants
     CVector3   objectColour; // Allows each light model to be tinted to match the light colour they cast
     float      padding6;
 	float      Wiggle;
+	CVector3   gObjectRGB;
 };
 extern PerModelConstants gPerModelConstants;      // This variable holds the CPU-side constant buffer described above
 extern ID3D11Buffer*     gPerModelConstantBuffer; // This variable controls the GPU-side constant buffer related to the above structure

@@ -5,7 +5,7 @@ LightingPixelShaderInput main(BasicVertex modelVertex)
 	LightingPixelShaderInput output; // This is the data the pixel shader requires from this vertex shader
 
     float sinY = sin(modelVertex.position.y * radians(360.0f) + gWiggle);
-    modelVertex.position.y += 1.0f * sinY;
+    modelVertex.position.y += 1 * sinY;
 
 	float4 modelPosition = float4(modelVertex.position, 1);
 

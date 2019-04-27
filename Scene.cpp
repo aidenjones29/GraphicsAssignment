@@ -45,7 +45,7 @@ Model* gCrate;
 Model* gGround;
 Model* gSphere;
 Model* gCube;
-Model* gCube2;
+Model* gCubeParallax;
 Model* gCube3;
 
 Camera* gCamera;
@@ -78,6 +78,7 @@ const float maxStrength = 60;
 float lightSize = 10;
 float currentRGB[3] = {0, 0,0};
 int currentChange = 0;
+CVector3 currentRotation;
 
 //--------------------------------------------------------------------------------------
 //**** Shadow Texture  ****//
@@ -117,6 +118,7 @@ ID3D11Buffer*     gPerModelConstantBuffer; // --"--
 
 float gParallaxDepth = 0.08f;
 bool gUseParallax = true;
+bool spinning = true;
 
 //--------------------------------------------------------------------------------------
 // Textures
@@ -182,7 +184,7 @@ bool InitGeometry()
     {
         gCharacterMesh = new Mesh("teapot.x", true);
         gCrateMesh     = new Mesh("CargoContainer.x");
-        gGroundMesh    = new Mesh("Hills.x");
+        gGroundMesh    = new Mesh("Ground.x");
         gLightMesh     = new Mesh("Light.x");
 		gSphereMesh    = new Mesh("Sphere.x");
 		gCubeMesh      = new Mesh("Cube.x");
@@ -320,7 +322,7 @@ bool InitScene()
     gGround    = new Model(gGroundMesh);
 	gSphere    = new Model(gSphereMesh);
 	gCube      = new Model(gCubeMesh);
-	gCube2     = new Model(gCube2Mesh);
+	gCubeParallax     = new Model(gCube2Mesh);
 	gCube3     = new Model(gCubeMesh);
 
 	// Initial positions
@@ -331,7 +333,7 @@ bool InitScene()
 	gCrate-> SetRotation({ 0.0f, ToRadians(-20.0f), 0.0f });
 	gSphere->SetPosition({ 50, 0, -20 });
 	gCube->SetPosition({ 40, 10, 10 });
-	gCube2->SetPosition({ 50, 10, -3 });
+	gCubeParallax->SetPosition({ -20, 10, -3 });
 	gCube3->SetPosition({ 20, 10, 40 });
 
     // Light set-up - using an array this time
@@ -409,7 +411,7 @@ void ReleaseResources()
     delete gCharacter; gCharacter = nullptr;
 	delete gSphere;    gSphere    = nullptr;
 	delete gCube;      gCube      = nullptr;
-	delete gCube2;     gCube2     = nullptr;
+	delete gCubeParallax;     gCubeParallax     = nullptr;
 	delete gCube3;     gCube3     = nullptr;
 
     delete gLightMesh;     gLightMesh     = nullptr;
@@ -458,7 +460,7 @@ void RenderDepthBufferFromLight(int lightIndex)
     gCrate->Render();
 	gSphere->Render();
 	gCube->Render();
-	gCube2->Render();
+	gCubeParallax->Render();
 	gCube3->Render();
 }
 
@@ -519,19 +521,19 @@ void RenderSceneFromCamera(Camera* camera)
 	gD3DContext->PSSetShaderResources(0, 1, &gCube2DiffuseSpecularMapSRV);
 	gD3DContext->PSSetShaderResources(1, 1, &gCube2NormalHeightMapSRV);
 	gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
-	gCube2->Render();
-
-	gD3DContext->PSSetShader(gLerpPixelShader, nullptr, 0);
-	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV);
-	gD3DContext->PSSetShaderResources(1, 1, &gCubeTwoDiffuseSpecularMapSRV);
-	gCube->Render();
-
+	gCubeParallax->Render();
 
 	gD3DContext->VSSetShader(gWiggleVertexShader, nullptr, 0);
 	gD3DContext->PSSetShader(gWigglePixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gSphereDiffuseSpecularMapSRV);
 	gSphere->Render();
-    //// Render lights ////
+
+	gD3DContext->PSSetShader(gLerpPixelShader, nullptr, 0);
+	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV);
+	gD3DContext->PSSetShaderResources(1, 1, &gCubeTwoDiffuseSpecularMapSRV);
+	gCube->Render();
+    
+	//// Render lights ////
 
     // Select which shaders to use next
     gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
@@ -652,17 +654,6 @@ void RenderScene()
     ID3D11ShaderResourceView* nullView = nullptr;
     gD3DContext->PSSetShaderResources(1, 1, &nullView);
 
-
-    //*****************************//
-    // Temporary demonstration code for visualising the light's view of the scene
-    //ColourRGBA white = {1,1,1};
-    //gD3DContext->ClearRenderTargetView(gBackBufferRenderTarget, &white.r);
-    //RenderDepthBufferFromLight(0);
-    //*****************************//
-
-
-    //// Scene completion ////
-
     // When drawing to the off-screen back buffer is complete, we "present" the image to the front buffer (the screen)
     gSwapChain->Present(0, 0);
 }
@@ -676,9 +667,9 @@ void RenderScene()
 void UpdateScene(float frameTime)
 {
 	// Control sphere (will update its world matrix)
-	gCharacter->Control(frameTime, Key_I, Key_K, Key_J, Key_L, Key_U, Key_O, Key_Period, Key_Comma );
+	gCharacter->Control(frameTime, Key_I, Key_K, Key_J, Key_L, Key_U, Key_O, Key_Period, Key_Comma);
 
-	gPerModelConstants.Wiggle += 3 * frameTime;
+	gPerModelConstants.Wiggle += 2 * frameTime;
 
 	if (gLights[1].strength > 0)
 	{
@@ -693,6 +684,7 @@ void UpdateScene(float frameTime)
 	}
 
 	gLights[0].colour = currentRGB;
+	gPerModelConstants.gObjectRGB = currentRGB;
 
 	currentRGB[currentChange] += 0.00005f;
 
@@ -714,6 +706,24 @@ void UpdateScene(float frameTime)
 	if (KeyHit(Key_1))
 	{
 		gUseParallax = !gUseParallax;
+	}
+
+	if (KeyHit(Key_2))
+	{
+		spinning = !spinning;
+	}
+
+	if (spinning == true)
+	{
+		gParallaxDepth = 0.5f;
+		currentRotation.y += 10.001f;
+		currentRotation.x = 0;
+		currentRotation.z = 0;
+		gCubeParallax->SetRotation(currentRotation);
+	}
+	else
+	{
+		gParallaxDepth = 0.08f;
 	}
 
     // Orbit the light - a bit of a cheat with the static variable [ask the tutor if you want to know what this is]

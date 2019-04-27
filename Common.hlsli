@@ -100,6 +100,7 @@ cbuffer PerModelConstants : register(b1) // The b1 gives this constant buffer th
     float3   gObjectColour;
     float    padding6;  // See notes on padding in structure above
     float    gWiggle;
+	float3   gObjectRGB;
 }
 
 struct TangentVertex

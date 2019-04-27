@@ -77,17 +77,27 @@ float4 main(LightingPixelShaderInput input) : SV_Target
     float3 diffuseLight = gAmbientColour + diffuseLight1 + diffuseLight2;
     float3 specularLight = specularLight1 + specularLight2;
 
-
 	////////////////////
 	// Combine lighting and textures
-    
-    // Sample diffuse material and specular material colour for this pixel from a texture using a given sampler that you set up in the C++ code
     float4 textureColour  = DiffuseSpecularMap.Sample(TexSampler, input.uv);
     float4 texture2Colour = DiffuseSpecularMap2.Sample(TexSampler, input.uv);
 
-    float t = sin(gWiggle / 2);
+    float t = sin(radians(360.0f) + gWiggle / 2);
 
-    float3 diffuseMaterialColour = lerp(textureColour.rgb, texture2Colour.rgb, t);
+	float4 FinalTextureColour;
+
+	FinalTextureColour = lerp(textureColour.rgba, texture2Colour.rgba, t);
+
+	if (t < 0)
+	{
+		FinalTextureColour = textureColour.rgba;
+	}
+	if (t > 1)
+	{
+		FinalTextureColour = texture2Colour.rgba;
+	}
+    
+	float3 diffuseMaterialColour = FinalTextureColour;
     float specularMaterialColour = lerp(textureColour.a, texture2Colour.a, t);
 
     float3 finalColour = diffuseLight * diffuseMaterialColour + specularLight * specularMaterialColour;
