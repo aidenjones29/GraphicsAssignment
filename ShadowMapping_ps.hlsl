@@ -54,8 +54,7 @@ float4 main(LightingPixelShaderInput input) : SV_Target
 	float3 light1Direction = normalize(gLight1Position - input.worldPosition);
 
 	// Check if pixel is within light cone
-    if (dot(-light1Direction, gLight1Facing) > gLight1CosHalfAngle) //**** TODO: This condition needs to be written as the first exercise to get spotlights working
-           //           As well as the variables above, you also will need values from the constant buffers in "common.hlsli"
+    if (dot(-light1Direction, gLight1Facing) > gLight1CosHalfAngle)
     {
 	    // Using the world position of the current pixel and the matrices of the light (as a camera), find the 2D position of the
 	    // pixel *as seen from the light*. Will use this to find which part of the shadow map to look at.

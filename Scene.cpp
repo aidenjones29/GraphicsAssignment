@@ -44,7 +44,7 @@ Model* gCharacter;
 Model* gCrate;
 Model* gGround;
 Model* gSphere;
-Model* gCube;
+Model* gCubeLerp;
 Model* gCubeParallax;
 Model* gCube3;
 
@@ -74,7 +74,7 @@ const float gLightOrbitSpeed = 0.7f;
 
 // Spotlight data - using spotlights in this lab because shadow mapping needs to treat each light as a camera, which is easy with spotlights
 float gSpotlightConeAngle = 90.0f; // Spot light cone angle (degrees), like the FOV (field-of-view) of the spot light
-const float maxStrength = 60;
+const float maxStrength = 90;
 float lightSize = 10;
 float currentRGB[3] = {0, 0,0};
 int currentChange = 0;
@@ -119,6 +119,7 @@ ID3D11Buffer*     gPerModelConstantBuffer; // --"--
 float gParallaxDepth = 0.08f;
 bool gUseParallax = true;
 bool spinning = true;
+bool wiggleActive = true;
 
 //--------------------------------------------------------------------------------------
 // Textures
@@ -321,7 +322,7 @@ bool InitScene()
     gCrate     = new Model(gCrateMesh);
     gGround    = new Model(gGroundMesh);
 	gSphere    = new Model(gSphereMesh);
-	gCube      = new Model(gCubeMesh);
+	gCubeLerp      = new Model(gCubeMesh);
 	gCubeParallax     = new Model(gCube2Mesh);
 	gCube3     = new Model(gCubeMesh);
 
@@ -332,7 +333,7 @@ bool InitScene()
 	gCrate-> SetScale(6);
 	gCrate-> SetRotation({ 0.0f, ToRadians(-20.0f), 0.0f });
 	gSphere->SetPosition({ 50, 0, -20 });
-	gCube->SetPosition({ 40, 10, 10 });
+	gCubeLerp->SetPosition({ 40, 10, 10 });
 	gCubeParallax->SetPosition({ -20, 10, -3 });
 	gCube3->SetPosition({ 20, 10, 40 });
 
@@ -343,7 +344,7 @@ bool InitScene()
     }
 
     gLights[0].colour = { 0.8f, 0.8f, 1.0f };
-    gLights[0].strength = 10;
+    gLights[0].strength = 90;
     gLights[0].model->SetPosition({ 30, 20, 0 });
     gLights[0].model->SetScale(pow(gLights[0].strength, 0.7f)); // Convert light strength into a nice value for the scale of the light - equation is ad-hoc.
 	gLights[0].model->FaceTarget(gCharacter->Position());
@@ -410,7 +411,7 @@ void ReleaseResources()
     delete gCrate;     gCrate     = nullptr;
     delete gCharacter; gCharacter = nullptr;
 	delete gSphere;    gSphere    = nullptr;
-	delete gCube;      gCube      = nullptr;
+	delete gCubeLerp;      gCubeLerp      = nullptr;
 	delete gCubeParallax;     gCubeParallax     = nullptr;
 	delete gCube3;     gCube3     = nullptr;
 
@@ -459,7 +460,7 @@ void RenderDepthBufferFromLight(int lightIndex)
     gCharacter->Render();
     gCrate->Render();
 	gSphere->Render();
-	gCube->Render();
+	gCubeLerp->Render();
 	gCubeParallax->Render();
 	gCube3->Render();
 }
@@ -531,7 +532,7 @@ void RenderSceneFromCamera(Camera* camera)
 	gD3DContext->PSSetShader(gLerpPixelShader, nullptr, 0);
 	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV);
 	gD3DContext->PSSetShaderResources(1, 1, &gCubeTwoDiffuseSpecularMapSRV);
-	gCube->Render();
+	gCubeLerp->Render();
     
 	//// Render lights ////
 
@@ -669,7 +670,8 @@ void UpdateScene(float frameTime)
 	// Control sphere (will update its world matrix)
 	gCharacter->Control(frameTime, Key_I, Key_K, Key_J, Key_L, Key_U, Key_O, Key_Period, Key_Comma);
 
-	gPerModelConstants.Wiggle += 2 * frameTime;
+	if (wiggleActive == true) { gPerModelConstants.Wiggle += 2 * frameTime; }
+	else { gPerModelConstants.Wiggle = 0; }
 
 	if (gLights[1].strength > 0)
 	{
@@ -689,13 +691,9 @@ void UpdateScene(float frameTime)
 	currentRGB[currentChange] += 0.00005f;
 
 	if (currentChange > 0)
-	{
-		currentRGB[currentChange - 1] -= 0.00005f;
-	}
+	{ currentRGB[currentChange - 1] -= 0.00005f; }
 	else
-	{
-		currentRGB[2] -= 0.00005f;
-	}
+	{ currentRGB[2] -= 0.00005f; }
 
 	if (currentRGB[currentChange] >= 1)
 	{
@@ -708,6 +706,11 @@ void UpdateScene(float frameTime)
 		gUseParallax = !gUseParallax;
 	}
 
+	if (KeyHit(Key_4))
+	{
+		wiggleActive = !wiggleActive;
+	}
+
 	if (KeyHit(Key_2))
 	{
 		spinning = !spinning;
@@ -715,8 +718,8 @@ void UpdateScene(float frameTime)
 
 	if (spinning == true)
 	{
-		gParallaxDepth = 0.5f;
-		currentRotation.y += 10.001f;
+		gParallaxDepth = 0.9f;
+		currentRotation.y += 10.0f;
 		currentRotation.x = 0;
 		currentRotation.z = 0;
 		gCubeParallax->SetRotation(currentRotation);
@@ -726,13 +729,13 @@ void UpdateScene(float frameTime)
 		gParallaxDepth = 0.08f;
 	}
 
-    // Orbit the light - a bit of a cheat with the static variable [ask the tutor if you want to know what this is]
+    // Orbit the light
 	static float rotate = 0.0f;
     static bool go = true;
 	gLights[0].model->SetPosition( gCharacter->Position() + CVector3{ cos(rotate) * gLightOrbit, 10, sin(rotate) * gLightOrbit } );
 	gLights[0].model->FaceTarget(gCharacter->Position());
     if (go)  rotate -= gLightOrbitSpeed * frameTime;
-    if (KeyHit(Key_1))  go = !go;
+    if (KeyHit(Key_3))  go = !go;
 
 	// Control camera (will update its view matrix)
 	gCamera->Control(frameTime, Key_Up, Key_Down, Key_Left, Key_Right, Key_W, Key_S, Key_A, Key_D );

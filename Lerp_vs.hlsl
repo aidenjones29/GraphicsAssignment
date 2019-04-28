@@ -1,10 +1,5 @@
 #include "Common.hlsli" // Shaders can also use include files - note the extension
 
-void main(uint3 DTid : SV_DispatchThreadID)
-{
-
-}
-
 LightingPixelShaderInput main(BasicVertex modelVertex)
 {
     LightingPixelShaderInput output; // This is the data the pixel shader requires from this vertex shader

@@ -14,8 +14,6 @@ float4 main(LightingPixelShaderInput input) : SV_Target
 {
     const float DepthAdjust = 0.0005f;
     input.worldNormal = normalize(input.worldNormal);
-    
-    //WIGGLE WAS HERE
 
     float3 cameraDirection = normalize(gCameraPosition - input.worldPosition);
 
