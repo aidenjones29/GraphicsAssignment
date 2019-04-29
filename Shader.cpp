@@ -26,7 +26,7 @@ ID3D11PixelShader*  gLerpPixelShader             = nullptr;
 ID3D11VertexShader* gParallaxMappingVertexShader = nullptr;
 ID3D11PixelShader*  gParallaxMappingPixelShader  = nullptr;
 ID3D11VertexShader* gNormalMappingVertexShader   = nullptr;
-ID3D11PixelShader* gNormalMappingPixelShader     = nullptr;
+ID3D11PixelShader*  gNormalMappingPixelShader     = nullptr;
 
 //--------------------------------------------------------------------------------------
 // Shader creation / destruction

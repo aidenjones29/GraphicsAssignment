@@ -465,11 +465,6 @@ void RenderDepthBufferFromLight(int lightIndex)
 	gCube3->Render();
 }
 
-
-
-// Render everything in the scene from the given camera
-// This code is common between rendering the main scene and rendering the scene in the portal
-// See RenderScene function below
 void RenderSceneFromCamera(Camera* camera)
 {
     // Set camera matrices in the constant buffer and send over to GPU
