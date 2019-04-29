@@ -17,7 +17,7 @@ float4 main(LightingPixelShaderInput input) : SV_Target
     input.worldNormal = normalize(input.worldNormal);
 
     float sinY = sin(input.uv.y * radians(360.0f) + gWiggle);
-    input.uv.y += 0.9f * sinY;
+    input.uv.x += 0.9f * sinY;
 
 	///////////////////////
 	// Calculate lighting

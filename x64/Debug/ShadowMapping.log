@@ -1,19 +1,2 @@
-﻿  compilation object save succeeded; see D:\AJones45\Documents\GitHub\GraphicsAss\Lerp_vs.cso
-  compilation object save succeeded; see D:\AJones45\Documents\GitHub\GraphicsAss\BasicTransform_vs.cso
-  compilation object save succeeded; see D:\AJones45\Documents\GitHub\GraphicsAss\ShadowMapping_ps.cso
-  compilation object save succeeded; see D:\AJones45\Documents\GitHub\GraphicsAss\Wiggle_vs.cso
-  Camera.cpp
-  Direct3DSetup.cpp
-  Main.cpp
-  CMatrix4x4.cpp
-  CVector2.cpp
-  CVector3.cpp
-  Mesh.cpp
-  Model.cpp
-  Scene.cpp
-  Shader.cpp
-  State.cpp
-  GraphicsHelpers.cpp
-  Timer.cpp
-  Generating Code...
+﻿  compilation object save succeeded; see D:\AJones45\Documents\GitHub\GraphicsAss\Wiggle_ps.cso
   ShadowMapping.vcxproj -> D:\AJones45\Documents\GitHub\GraphicsAss\\ShadowMapping.exe
